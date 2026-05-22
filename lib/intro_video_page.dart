@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'api/auth_service.dart';
+import 'app_maintenance_page.dart';
 import 'gen_l10n/app_localizations.dart';
 import 'login_page.dart';
 import 'staff_home_page.dart';
@@ -38,6 +39,15 @@ class _IntroVideoPageState extends State<IntroVideoPage> {
 
   Future<void> _checkVersionAndStart() async {
     try {
+      if (!await widget.auth.checkAppActive()) {
+        if (!mounted) return;
+        setState(() => _checkingVersion = false);
+        openStaffAppMaintenanceScreen(context, auth: widget.auth);
+        return;
+      }
+    } catch (_) {}
+
+    try {
       String? platform;
       if (Platform.isAndroid) {
         platform = 'android';
@@ -53,6 +63,12 @@ class _IntroVideoPageState extends State<IntroVideoPage> {
         );
 
         if (!mounted) return;
+
+        if (!result.appActive) {
+          setState(() => _checkingVersion = false);
+          openStaffAppMaintenanceScreen(context, auth: widget.auth);
+          return;
+        }
 
         if (!result.allowed) {
           setState(() {

@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:developer' as developer;
+import 'dart:io' show Platform;
 import 'dart:ui' show Locale;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../app_settings.dart';
 import '../gen_l10n/app_localizations.dart';
@@ -2610,7 +2612,53 @@ class AuthService {
       storeUrl: storeUrlRaw is String && storeUrlRaw.isNotEmpty
           ? storeUrlRaw
           : null,
+      appActive: _parseAppActiveFlag(json['app_active']),
     );
+  }
+
+  /// GET /api/app/staff/status — staff app maintenance gate.
+  /// Falls back to POST /api/app/staff/version/check when the status route is unavailable.
+  Future<bool> checkAppActive() async {
+    final cacheBust = DateTime.now().millisecondsSinceEpoch.toString();
+    final headers = {
+      'Accept': 'application/json',
+      'Cache-Control': 'no-cache',
+    };
+
+    try {
+      final uri = Uri.parse('$baseUrl/api/app/staff/status').replace(
+        queryParameters: {'_': cacheBust},
+      );
+      final res = await http.get(uri, headers: headers);
+      if (res.statusCode == 200) {
+        final json = jsonDecode(res.body) as Map<String, dynamic>;
+        return _parseAppActiveFlag(json['app_active']);
+      }
+    } catch (_) {}
+
+    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+      try {
+        final info = await PackageInfo.fromPlatform();
+        final platform = Platform.isAndroid ? 'android' : 'ios';
+        final result = await checkAppVersion(
+          platform: platform,
+          version: info.version,
+        );
+        return result.appActive;
+      } catch (_) {}
+    }
+
+    throw Exception('Unable to check app status');
+  }
+
+  static bool _parseAppActiveFlag(dynamic raw) {
+    if (raw == true || raw == 1 || raw == '1' || raw == 'true') {
+      return true;
+    }
+    if (raw == false || raw == 0 || raw == '0' || raw == 'false') {
+      return false;
+    }
+    return true;
   }
 
   String? _tryMessage(String body) {
@@ -2838,10 +2886,15 @@ class LoginResult {
 }
 
 class AppVersionCheckResult {
-  AppVersionCheckResult({required this.allowed, this.storeUrl});
+  AppVersionCheckResult({
+    required this.allowed,
+    this.storeUrl,
+    this.appActive = true,
+  });
 
   final bool allowed;
   final String? storeUrl;
+  final bool appActive;
 }
 
 class WorkerStatus {

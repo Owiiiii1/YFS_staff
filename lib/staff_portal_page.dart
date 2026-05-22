@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'api/auth_service.dart';
+import 'app_maintenance_page.dart';
 import 'app_settings.dart';
 import 'gen_l10n/app_localizations.dart';
 import 'login_page.dart';
@@ -3565,6 +3566,15 @@ class _StaffPortalPageState extends State<StaffPortalPage> {
   }
 
   Future<void> _onBottomNavTap(int index) async {
+    try {
+      if (!await widget.auth.checkAppActive()) {
+        if (mounted) {
+          openStaffAppMaintenanceScreen(context, auth: widget.auth);
+        }
+        return;
+      }
+    } catch (_) {}
+
     await _refreshLiveWorkerStatus();
     if (!mounted) return;
     setState(() => _currentTab = index);
