@@ -4,6 +4,9 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m2
 
+    integrations:
+      app_store_connect: app_store_connect
+
     environment:
       flutter: stable
       xcode: latest
@@ -13,30 +16,26 @@ workflows:
 
       vars:
         BUNDLE_ID: "com.youngfashionshow.staff"
-        APP_STORE_APPLE_ID: "6772339384"
+        APP_STORE_APPLE_ID: "6072339384"
 
     scripts:
       - name: Get Flutter packages
-        script: |
-          flutter pub get
+        script: flutter pub get
 
-      - name: Install pods
+      - name: Install CocoaPods
         script: |
           cd ios
           pod install
           cd ..
 
-      - name: Build iOS release
-        script: |
-          flutter build ipa --release \
-            --export-options-plist=/Users/builder/export_options.plist
+      - name: Build IPA
+        script: flutter build ipa --release
 
     artifacts:
       - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
 
     publishing:
       app_store_connect:
         auth: integration
         submit_to_testflight: true
-        beta_groups:
-          - Internal Testers
