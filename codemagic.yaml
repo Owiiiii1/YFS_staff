@@ -20,7 +20,7 @@ workflows:
         BUNDLE_ID: "com.youngfashionshow.staff"
         APP_STORE_APPLE_ID: "6072339384"
 
-    scripts:
+       scripts:
       - name: Get Flutter packages
         script: flutter pub get
 
@@ -37,7 +37,7 @@ workflows:
       - name: Build IPA
         script: |
           flutter build ipa --release \
-            --export-options-plist=$CM_EXPORT_OPTIONS_PLIST
+            --export-options-plist=/Users/builder/export_options.plist
 
     artifacts:
       - build/ios/ipa/*.ipa
