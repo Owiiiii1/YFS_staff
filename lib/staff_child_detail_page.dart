@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'api/auth_service.dart';
 import 'gen_l10n/app_localizations.dart';
 
@@ -205,6 +206,29 @@ class _StaffChildDetailPageState extends State<StaffChildDetailPage> {
                     ),
                   ),
                 ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: SizedBox(
+                    height: 46,
+                    child: ElevatedButton(
+                      onPressed: () => _openChildLook(d),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1565C0),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        l10n.staffLookButton,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
                 if (d.familyLookEnabled && d.familyLookParentsCount >= 1)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
@@ -307,9 +331,11 @@ class _StaffChildDetailPageState extends State<StaffChildDetailPage> {
                           ],
                         ),
                       ),
-                      _roundAction(Icons.call, filled: true, onTap: () {}),
-                      const SizedBox(width: 8),
-                      _roundAction(Icons.chat_bubble_outline, onTap: () {}),
+                      _roundAction(
+                        Icons.call,
+                        filled: true,
+                        onTap: () => _dialParent(d.parentPhone),
+                      ),
                     ],
                   ),
                 ),
@@ -319,6 +345,41 @@ class _StaffChildDetailPageState extends State<StaffChildDetailPage> {
         ),
       ],
     );
+  }
+
+  Future<void> _dialParent(String? phone) async {
+    final l10n = AppLocalizations.of(context)!;
+    final raw = (phone ?? '').trim();
+    if (raw.isEmpty || raw == '—') {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.staffCouldNotOpenDialer)),
+      );
+      return;
+    }
+    final digits = raw.replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.staffCouldNotOpenDialer)),
+      );
+      return;
+    }
+    final uri = Uri.parse('tel:$digits');
+    try {
+      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!ok && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.staffCouldNotOpenDialer)),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.staffCouldNotOpenDialer)),
+        );
+      }
+    }
   }
 
   Widget _sectionTitle(IconData icon, String title) {
@@ -410,13 +471,15 @@ class _StaffChildDetailPageState extends State<StaffChildDetailPage> {
   }
 
   String _formatHeight(SupervisorChildDetail d) {
+    // API всегда отдаёт height_value в см; height_unit — preference отображения.
     if (d.heightValue == null) return '—';
-    final unit = (d.heightUnit?.trim().isNotEmpty ?? false)
-        ? d.heightUnit!.toLowerCase() == 'imperial'
-              ? 'in'
-              : 'cm'
-        : 'cm';
-    return '${d.heightValue!.toStringAsFixed(0)} $unit';
+    final preferImperial =
+        (d.heightUnit?.trim().toLowerCase() ?? 'metric') == 'imperial';
+    if (preferImperial) {
+      final inches = d.heightValue! / 2.54;
+      return '${inches.toStringAsFixed(0)} in';
+    }
+    return '${d.heightValue!.toStringAsFixed(0)} cm';
   }
 
   String _formatBirthdate(DateTime d) {
@@ -435,6 +498,215 @@ class _StaffChildDetailPageState extends State<StaffChildDetailPage> {
     final l10n = AppLocalizations.of(context)!;
     final rows = _timelineRows(d);
     _openTimelineSheet(l10n.staffEventTimelineTitle, rows);
+  }
+
+  Future<void> _openChildLook(SupervisorChildDetail d) async {
+    final l10n = AppLocalizations.of(context)!;
+    final brands = <String>[
+      ...d.assignedBrandNames.map((e) => e.trim()).where((e) => e.isNotEmpty),
+    ];
+    final primary = (d.brandName ?? '').trim();
+    if (primary.isNotEmpty && !brands.contains(primary)) {
+      brands.insert(0, primary);
+    }
+    if (brands.isEmpty) {
+      _showLookMessage(l10n.staffLookNoBrand);
+      return;
+    }
+
+    String? selectedBrand = brands.first;
+    if (brands.length > 1) {
+      selectedBrand = await showModalBottomSheet<String>(
+        context: context,
+        backgroundColor: const Color(0xFF0f0f0f),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        builder: (ctx) {
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    l10n.staffLookSelectBrand,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  ...brands.map(
+                    (brand) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(ctx).pop(brand),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _kPrimary,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: Text(brand),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+      if (selectedBrand == null || selectedBrand.trim().isEmpty) {
+        return;
+      }
+    }
+
+    var eventName = (d.eventName ?? '').trim();
+    if (eventName.isEmpty) {
+      try {
+        final settings = await widget.auth.getStaffCurrentSettings();
+        eventName = (settings.currentEventName ?? '').trim();
+      } catch (_) {}
+    }
+    final childName = d.firstName.trim();
+    if (eventName.isEmpty || childName.isEmpty) {
+      _showLookMessage(l10n.staffLookLoadFailed);
+      return;
+    }
+
+    if (!mounted) return;
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(
+        child: CircularProgressIndicator(color: _kPrimary),
+      ),
+    );
+
+    try {
+      var result = await widget.auth.fetchChildLookFromImportApi(
+        eventName: eventName,
+        brandName: selectedBrand.trim(),
+        childName: childName,
+      );
+      // Fallback через YFS proxy, если прямой вызов не дал фото.
+      if (!result.ok || (result.costumePhotoUrl ?? '').isEmpty) {
+        result = await widget.auth.getSupervisorChildLook(
+          d.assignmentId,
+          brandName: selectedBrand.trim(),
+        );
+      }
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop();
+      final photoUrl = (result.costumePhotoUrl ?? '').trim();
+      if (!result.ok || photoUrl.isEmpty) {
+        _showLookMessage(
+          (result.message ?? '').trim().isNotEmpty
+              ? result.message!.trim()
+              : l10n.staffLookNotFound,
+        );
+        return;
+      }
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) {
+          return Dialog(
+            backgroundColor: const Color(0xFF0f0f0f),
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 24,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          l10n.staffLookTitle,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        icon: const Icon(Icons.close, color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(ctx).size.height * 0.65,
+                    ),
+                    child: InteractiveViewer(
+                      child: Image.network(
+                        photoUrl,
+                        fit: BoxFit.contain,
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return const SizedBox(
+                            height: 220,
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: _kPrimary,
+                              ),
+                            ),
+                          );
+                        },
+                        errorBuilder: (_, __, ___) => Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Text(
+                            l10n.staffLookLoadFailed,
+                            style: const TextStyle(color: Colors.white70),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop();
+      _showLookMessage(e.toString());
+    }
+  }
+
+  void _showLookMessage(String message) {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF0f0f0f),
+        title: Text(
+          l10n.staffLookTitle,
+          style: const TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          message,
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l10n.close),
+          ),
+        ],
+      ),
+    );
   }
 
   void _openParentTimeline(SupervisorChildDetail d, int parentSlot) {

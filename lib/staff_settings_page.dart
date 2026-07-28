@@ -32,14 +32,12 @@ class StaffSettingsPage extends StatefulWidget {
 
 class _StaffSettingsPageState extends State<StaffSettingsPage> {
   StaffRole? _selectedRole;
-  List<UpcomingEvent> _upcomingEvents = [];
 
   /// Все этапы ивента с API (до фильтра по роли).
   List<WorkerEventStage> _allStagesForEvent = [];
 
   /// Этапы, доступные для [_selectedRole] (пересечение с назначением роли в админке).
   List<WorkerEventStage> _eventStages = [];
-  bool _eventsLoading = true;
 
   @override
   void initState() {
@@ -47,27 +45,11 @@ class _StaffSettingsPageState extends State<StaffSettingsPage> {
     _selectedRole =
         widget.currentRole ??
         (widget.staffRoles.isNotEmpty ? widget.staffRoles.first : null);
-    _loadEvents();
-  }
-
-  Future<void> _loadEvents() async {
-    setState(() => _eventsLoading = true);
-    try {
-      final list = await widget.auth.getWorkerUpcomingEvents();
-      if (!mounted) return;
-      setState(() {
-        _upcomingEvents = list;
-        _eventsLoading = false;
-      });
-      await _loadStagesForActiveEvent();
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _eventsLoading = false);
-    }
+    _loadStagesForActiveEvent();
   }
 
   Future<void> _loadStagesForActiveEvent() async {
-    final eventId = _effectiveActiveEventId();
+    final eventId = AppSettings.staffActiveEventId;
     if (eventId == null || eventId <= 0) {
       if (!mounted) return;
       setState(() {
@@ -152,8 +134,6 @@ class _StaffSettingsPageState extends State<StaffSettingsPage> {
           children: [
             _buildProfile(l10n),
             const SizedBox(height: 24),
-            _buildActiveEventSection(),
-            const SizedBox(height: 24),
             _buildSwitchRole(l10n),
           ],
         ),
@@ -161,88 +141,10 @@ class _StaffSettingsPageState extends State<StaffSettingsPage> {
     );
   }
 
-  Widget _buildActiveEventSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          AppLocalizations.of(context)!.staffActiveEvent,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 12),
-        if (_eventsLoading)
-          const Center(
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: _kPrimary,
-                ),
-              ),
-            ),
-          )
-        else
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withOpacity(0.15)),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<int?>(
-                value: _effectiveActiveEventId(),
-                isExpanded: true,
-                dropdownColor: const Color(0xFF2a1a14),
-                icon: Icon(Icons.keyboard_arrow_down, color: _kPrimary),
-                style: const TextStyle(color: Colors.white, fontSize: 16),
-                hint: Text(
-                  AppLocalizations.of(context)!.staffSelectEvent,
-                  style: TextStyle(color: Colors.white54),
-                ),
-                items: [
-                  DropdownMenuItem<int?>(
-                    value: null,
-                    child: Text(
-                      AppLocalizations.of(context)!.staffNoneSelected,
-                    ),
-                  ),
-                  ..._upcomingEvents.map(
-                    (e) => DropdownMenuItem<int?>(
-                      value: e.id,
-                      child: Text(e.name, overflow: TextOverflow.ellipsis),
-                    ),
-                  ),
-                ],
-                onChanged: (int? value) async {
-                  await AppSettings.setStaffActiveEventId(value);
-                  await AppSettings.setStaffActiveStageId(null);
-                  await AppSettings.setStaffActiveStageType(null);
-                  await _loadStagesForActiveEvent();
-                  if (mounted) setState(() {});
-                },
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  int? _effectiveActiveEventId() {
-    final current = AppSettings.staffActiveEventId;
-    if (current == null) return null;
-    final exists = _upcomingEvents.any((e) => e.id == current);
-    return exists ? current : null;
-  }
-
   Widget _buildProfile(AppLocalizations l10n) {
+    final roleTitle = (_selectedRole?.name.trim().isNotEmpty ?? false)
+        ? _selectedRole!.name.trim()
+        : l10n.staff;
     return Column(
       children: [
         Stack(
@@ -270,24 +172,11 @@ class _StaffSettingsPageState extends State<StaffSettingsPage> {
         ),
         const SizedBox(height: 16),
         Text(
-          (widget.user['name'] ?? '').toString().trim().isNotEmpty
-              ? (widget.user['name']).toString().trim()
-              : l10n.staff,
+          roleTitle,
           style: const TextStyle(
             color: Colors.white,
             fontSize: 22,
             fontWeight: FontWeight.bold,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          (_selectedRole?.name ?? 'STAFF').toUpperCase(),
-          style: TextStyle(
-            color: _kPrimary,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 1.2,
           ),
           textAlign: TextAlign.center,
         ),
@@ -307,7 +196,6 @@ class _StaffSettingsPageState extends State<StaffSettingsPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               AppLocalizations.of(context)!.staffSwitchRole,
@@ -317,15 +205,22 @@ class _StaffSettingsPageState extends State<StaffSettingsPage> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            Text(
-              AppLocalizations.of(context)!.staffCurrentRoleLabel(
-                (_selectedRole?.name ?? '').toUpperCase(),
-              ),
-              style: TextStyle(
-                color: _kPrimary,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.8,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                AppLocalizations.of(context)!.staffCurrentRoleLabel(
+                  (_selectedRole?.name ?? '').toUpperCase(),
+                ),
+                textAlign: TextAlign.end,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                softWrap: true,
+                style: TextStyle(
+                  color: _kPrimary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.8,
+                ),
               ),
             ),
           ],
@@ -385,6 +280,8 @@ class _RoleCard extends StatelessWidget {
     switch (role.homeScreenType.trim().toLowerCase()) {
       case 'scan':
         return Icons.qr_code_scanner;
+      case 'photographer_assistant':
+        return Icons.photo_camera_outlined;
       case 'qr_check':
         return Icons.fact_check_outlined;
       case 'supervisor':
@@ -476,6 +373,7 @@ class _RoleCard extends StatelessWidget {
       case 'supervisor':
         return AppLocalizations.of(context)!.staffRoleSubtitleSupervisor;
       case 'photographer':
+      case 'pomoshhnik_fotografa':
         return AppLocalizations.of(context)!.staffRoleSubtitlePhotographer;
       case 'stylist':
         return AppLocalizations.of(context)!.staffRoleSubtitleStylist;
@@ -491,6 +389,8 @@ class _RoleCard extends StatelessWidget {
     switch (role.homeScreenType.trim().toLowerCase()) {
       case 'scan':
         return AppLocalizations.of(context)!.staffRoleSubtitleScan;
+      case 'photographer_assistant':
+        return AppLocalizations.of(context)!.staffRoleSubtitlePhotographer;
       case 'qr_check':
         return AppLocalizations.of(context)!.staffRoleSubtitleQrCheck;
       case 'supervisor':

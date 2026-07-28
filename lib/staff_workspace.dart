@@ -26,15 +26,14 @@ StaffRole? _roleByCode(WorkerStatus status, String? code) {
   return null;
 }
 
-/// После [AppSettings.load]: если ивент, роль и этап из prefs ещё допустимы — не трогаем.
-/// Иначе: ближайший ивент (первый в списке upcoming), первая назначенная роль (если код в prefs невалиден), первый этап из пересечения этапов ивента и этапов роли.
+/// После [AppSettings.load]: использует текущий ивент из админки
+/// ([AppSettings.staffActiveEventId]), затем подбирает валидные роль/этап.
 Future<void> bootstrapStaffWorkspace(AuthService auth, WorkerStatus status) async {
   if (!status.isWorker || status.staffRoles.isEmpty) {
     return;
   }
 
   try {
-    final events = await auth.getWorkerUpcomingEvents();
     final savedEid = AppSettings.staffActiveEventId;
     final savedRcode = AppSettings.staffSelectedRoleCode;
     final savedSid = AppSettings.staffActiveStageId;
@@ -42,10 +41,7 @@ Future<void> bootstrapStaffWorkspace(AuthService auth, WorkerStatus status) asyn
 
     final roleFromSaved = _roleByCode(status, savedRcode);
 
-    if (savedEid != null &&
-        events.any((e) => e.id == savedEid) &&
-        roleFromSaved != null &&
-        savedSid != null) {
+    if (savedEid != null && roleFromSaved != null && savedSid != null) {
       final raw = await auth.getWorkerEventStages(savedEid);
       final allowed = stagesAllowedForRole(raw, roleFromSaved);
       final stageOk = allowed.any(
@@ -57,15 +53,9 @@ Future<void> bootstrapStaffWorkspace(AuthService auth, WorkerStatus status) asyn
     }
 
     final defaultRole = roleFromSaved ?? status.staffRoles.first;
-    int? defaultEid;
-    if (savedEid != null && events.any((e) => e.id == savedEid)) {
-      defaultEid = savedEid;
-    } else {
-      defaultEid = events.isNotEmpty ? events.first.id : null;
-    }
+    final defaultEid = savedEid;
 
     if (defaultEid == null) {
-      await AppSettings.setStaffActiveEventId(null);
       await AppSettings.setStaffActiveStageId(null);
       await AppSettings.setStaffActiveStageType(null);
       await AppSettings.setStaffSelectedRoleCode(defaultRole.code);
@@ -87,7 +77,6 @@ Future<void> bootstrapStaffWorkspace(AuthService auth, WorkerStatus status) asyn
       pick = allowed.first;
     }
 
-    await AppSettings.setStaffActiveEventId(defaultEid);
     await AppSettings.setStaffSelectedRoleCode(defaultRole.code);
     if (pick != null) {
       await AppSettings.setStaffActiveStageId(pick.id);

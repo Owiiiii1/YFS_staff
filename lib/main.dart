@@ -13,10 +13,10 @@ import 'intro_video_page.dart';
 /// (`--dart-define=API_BASE_URL=...`). Если на сервере просто добавили вход по домену, а по IP
 /// всё тот же Laravel, приложение с [defaultValue] по-прежнему ходит на IP, пока вы явно не
 /// соберёте его с другим `API_BASE_URL`.
-/// Пример: `flutter run --dart-define=API_BASE_URL=https://api.example.com`
+/// Пример: `flutter run --dart-define=API_BASE_URL=https://app.youngfashionshow.com`
 const String _kApiBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
-  defaultValue: 'http://178.156.234.23',
+  defaultValue: 'https://app.youngfashionshow.com',
 );
 
 String _normalizeApiBase(String raw) {

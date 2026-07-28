@@ -2254,7 +2254,7 @@ abstract class AppLocalizations {
   /// No description provided for @contactFormLinkMissing.
   ///
   /// In en, this message translates to:
-  /// **'No form link is set. Add В«Contact / signup form URLВ» in Application settings in the admin.'**
+  /// **'No form link is set. Add «Contact / signup form URL» in Application settings in the admin.'**
   String get contactFormLinkMissing;
 
   /// No description provided for @infoHubTitle.
@@ -2290,7 +2290,7 @@ abstract class AppLocalizations {
   /// No description provided for @infoFooterCopyright.
   ///
   /// In en, this message translates to:
-  /// **'В© 2024 Young Fashion Series. All rights reserved.'**
+  /// **'© 2024 Young Fashion Series. All rights reserved.'**
   String get infoFooterCopyright;
 
   /// No description provided for @parentProgressLabel.
@@ -2376,6 +2376,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'TIMELINE'**
   String get staffEventTimelineButton;
+
+  /// No description provided for @staffLookButton.
+  ///
+  /// In en, this message translates to:
+  /// **'LOOK'**
+  String get staffLookButton;
+
+  /// No description provided for @staffLookTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Look'**
+  String get staffLookTitle;
+
+  /// No description provided for @staffLookSelectBrand.
+  ///
+  /// In en, this message translates to:
+  /// **'Select brand'**
+  String get staffLookSelectBrand;
+
+  /// No description provided for @staffLookNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Look not found'**
+  String get staffLookNotFound;
+
+  /// No description provided for @staffLookLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load look'**
+  String get staffLookLoadFailed;
+
+  /// No description provided for @staffLookNoBrand.
+  ///
+  /// In en, this message translates to:
+  /// **'Child has no assigned brand'**
+  String get staffLookNoBrand;
 
   /// No description provided for @staffEventTimelineTitle.
   ///
@@ -2827,6 +2863,60 @@ abstract class AppLocalizations {
   /// **'Select rehearsal slot first'**
   String get staffRehearsalCheckinSelectSlotFirst;
 
+  /// No description provided for @staffRehearsalCheckinParticipantsTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Participants table'**
+  String get staffRehearsalCheckinParticipantsTable;
+
+  /// No description provided for @staffRehearsalCheckinParticipantsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Participants'**
+  String get staffRehearsalCheckinParticipantsTitle;
+
+  /// No description provided for @staffBrandRehearsalActiveStage.
+  ///
+  /// In en, this message translates to:
+  /// **'Active brand rehearsal'**
+  String get staffBrandRehearsalActiveStage;
+
+  /// No description provided for @staffBrandRehearsalSelectWorkplaceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select workplace'**
+  String get staffBrandRehearsalSelectWorkplaceTitle;
+
+  /// No description provided for @staffBrandRehearsalSelectWorkplaceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the brand rehearsal you are working at.'**
+  String get staffBrandRehearsalSelectWorkplaceHint;
+
+  /// No description provided for @staffBrandRehearsalActivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate'**
+  String get staffBrandRehearsalActivate;
+
+  /// No description provided for @staffBrandRehearsalSelectStageFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Select brand rehearsal stage first'**
+  String get staffBrandRehearsalSelectStageFirst;
+
+  /// No description provided for @staffBrandRehearsalCheckinButton.
+  ///
+  /// In en, this message translates to:
+  /// **'BRAND REHEARSAL\nCHECK-IN'**
+  String get staffBrandRehearsalCheckinButton;
+
+  /// No description provided for @staffTapToScanBrandRehearsal.
+  ///
+  /// In en, this message translates to:
+  /// **'TAP TO SCAN CHECK-IN OR BADGE QR'**
+  String get staffTapToScanBrandRehearsal;
+
   /// No description provided for @staffRehearsalAdminBookedChildrenTitle.
   ///
   /// In en, this message translates to:
@@ -2851,11 +2941,47 @@ abstract class AppLocalizations {
   /// **'CONTROL'**
   String get staffGiftControlButton;
 
+  /// No description provided for @staffGiftIssueSelectWorkplaceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select stage'**
+  String get staffGiftIssueSelectWorkplaceTitle;
+
+  /// No description provided for @staffGiftIssueSelectWorkplaceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the gift stage you are working at.'**
+  String get staffGiftIssueSelectWorkplaceHint;
+
+  /// No description provided for @staffGiftIssueSelectStageFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Select gift stage first'**
+  String get staffGiftIssueSelectStageFirst;
+
   /// No description provided for @staffGiftControlTitle.
   ///
   /// In en, this message translates to:
   /// **'Gift Issue Control'**
   String get staffGiftControlTitle;
+
+  /// No description provided for @staffGiftControlSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name'**
+  String get staffGiftControlSearchHint;
+
+  /// No description provided for @staffGiftControlSelectSlot.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by rehearsal slot'**
+  String get staffGiftControlSelectSlot;
+
+  /// No description provided for @staffGiftControlAllSlots.
+  ///
+  /// In en, this message translates to:
+  /// **'All rehearsal slots'**
+  String get staffGiftControlAllSlots;
 
   /// No description provided for @staffGiftControlSelectStage.
   ///
@@ -3424,7 +3550,7 @@ abstract class AppLocalizations {
   /// No description provided for @staffRoleSubtitlePhotographer.
   ///
   /// In en, this message translates to:
-  /// **'Media capture & uploads'**
+  /// **'QR scan with photo stage selector'**
   String get staffRoleSubtitlePhotographer;
 
   /// No description provided for @staffRoleSubtitleStylist.
@@ -3448,7 +3574,7 @@ abstract class AppLocalizations {
   /// No description provided for @staffHostessEntryHint.
   ///
   /// In en, this message translates to:
-  /// **'Scan child badge to close selected stage and sync Family Look parents'**
+  /// **'Scan check-in or child badge to close selected stage and sync Family Look parents'**
   String get staffHostessEntryHint;
 
   /// No description provided for @staffHostessExitHint.

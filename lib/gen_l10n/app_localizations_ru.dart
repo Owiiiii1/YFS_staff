@@ -1245,6 +1245,24 @@ class AppLocalizationsRu extends AppLocalizations {
   String get staffEventTimelineButton => 'ТАЙМЛАЙН';
 
   @override
+  String get staffLookButton => 'ОБРАЗ';
+
+  @override
+  String get staffLookTitle => 'Образ';
+
+  @override
+  String get staffLookSelectBrand => 'Выберите бренд';
+
+  @override
+  String get staffLookNotFound => 'Образ не найден';
+
+  @override
+  String get staffLookLoadFailed => 'Не удалось загрузить образ';
+
+  @override
+  String get staffLookNoBrand => 'У ребёнка не назначен бренд';
+
+  @override
   String get staffEventTimelineTitle => 'Таймлайн ивента';
 
   @override
@@ -1498,6 +1516,35 @@ class AppLocalizationsRu extends AppLocalizations {
       'Сначала выберите слот репетиции';
 
   @override
+  String get staffRehearsalCheckinParticipantsTable => 'Таблица участников';
+
+  @override
+  String get staffRehearsalCheckinParticipantsTitle => 'Участники';
+
+  @override
+  String get staffBrandRehearsalActiveStage => 'Активная репетиция бренда';
+
+  @override
+  String get staffBrandRehearsalSelectWorkplaceTitle => 'Выберите место работы';
+
+  @override
+  String get staffBrandRehearsalSelectWorkplaceHint =>
+      'Выберите репетицию бренда, на которой работаете.';
+
+  @override
+  String get staffBrandRehearsalActivate => 'Активировать';
+
+  @override
+  String get staffBrandRehearsalSelectStageFirst =>
+      'Сначала выберите репетицию бренда';
+
+  @override
+  String get staffBrandRehearsalCheckinButton => 'ЧЕК-ИН РЕПЕТИЦИИ\nБРЕНДА';
+
+  @override
+  String get staffTapToScanBrandRehearsal => 'СКАНИРУЙТЕ CHECK-IN ИЛИ БЕЙДЖ';
+
+  @override
   String get staffRehearsalAdminBookedChildrenTitle => 'Записанные дети';
 
   @override
@@ -1512,7 +1559,27 @@ class AppLocalizationsRu extends AppLocalizations {
   String get staffGiftControlButton => 'КОНТРОЛЬ';
 
   @override
+  String get staffGiftIssueSelectWorkplaceTitle => 'Выберите этап';
+
+  @override
+  String get staffGiftIssueSelectWorkplaceHint =>
+      'Выберите этап выдачи подарков, на котором работаете.';
+
+  @override
+  String get staffGiftIssueSelectStageFirst =>
+      'Сначала выберите этап выдачи подарков';
+
+  @override
   String get staffGiftControlTitle => 'Контроль выдачи подарков';
+
+  @override
+  String get staffGiftControlSearchHint => 'Поиск по имени';
+
+  @override
+  String get staffGiftControlSelectSlot => 'Фильтр по слоту репетиции';
+
+  @override
+  String get staffGiftControlAllSlots => 'Все слоты репетиций';
 
   @override
   String get staffGiftControlSelectStage => 'Выберите этап отчета';
@@ -1815,7 +1882,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get staffRoleSubtitleSuperadmin => 'Инструменты суперадмина';
 
   @override
-  String get staffRoleSubtitlePhotographer => 'Съемка и загрузка медиа';
+  String get staffRoleSubtitlePhotographer => 'Скан с выбором фото-этапа';
 
   @override
   String get staffRoleSubtitleStylist => 'Гардероб и макияж';
@@ -1828,7 +1895,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get staffHostessEntryHint =>
-      'Сканируйте бейдж ребенка, чтобы закрыть выбранный этап и синхронизировать родителей Family Look';
+      'Сканируйте check-in или бейдж ребенка, чтобы закрыть выбранный этап и синхронизировать родителей Family Look';
 
   @override
   String get staffHostessExitHint =>

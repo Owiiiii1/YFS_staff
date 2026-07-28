@@ -487,10 +487,46 @@ class AuthService {
     return RehearsalAdminRosterResponse.fromJson(json);
   }
 
-  /// GET /api/app/worker/gift-control-report?event_id=&stage_id=&status_filter=
+  /// GET /api/app/worker/brand-rehearsal-checkin/roster?event_id=&stage_id=
+  Future<List<RehearsalAdminChildItem>> getWorkerBrandRehearsalCheckinRoster({
+    required int eventId,
+    required int stageId,
+  }) async {
+    final token = await getToken();
+    if (token == null || token.isEmpty) throw Exception('Not authenticated');
+    final uri = Uri.parse(
+      '$baseUrl/api/app/worker/brand-rehearsal-checkin/roster',
+    ).replace(
+      queryParameters: {
+        'event_id': eventId.toString(),
+        'stage_id': stageId.toString(),
+      },
+    );
+    final res = await http.get(
+      uri,
+      headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'},
+    );
+    if (res.statusCode != 200) {
+      throw Exception(
+        _tryMessage(res.body) ??
+            'Failed to load brand rehearsal roster (${res.statusCode})',
+      );
+    }
+    final json = jsonDecode(res.body) as Map<String, dynamic>;
+    final childList = json['children'];
+    if (childList is! List) return const [];
+    return childList
+        .map(
+          (e) => RehearsalAdminChildItem.fromJson(e as Map<String, dynamic>),
+        )
+        .toList();
+  }
+
+  /// GET /api/app/worker/gift-control-report?event_id=&stage_id=&slot_id=&status_filter=
   Future<GiftControlReportResponse> getWorkerGiftControlReport(
     int eventId, {
     int? stageId,
+    int? slotId,
     int? staffRoleId,
     String statusFilter = 'all',
   }) async {
@@ -498,6 +534,7 @@ class AuthService {
     if (token == null || token.isEmpty) throw Exception('Not authenticated');
     final query = <String, String>{'event_id': eventId.toString()};
     if (stageId != null && stageId > 0) query['stage_id'] = stageId.toString();
+    if (slotId != null && slotId > 0) query['slot_id'] = slotId.toString();
     if (staffRoleId != null && staffRoleId > 0) {
       query['staff_role_id'] = staffRoleId.toString();
     }
@@ -814,7 +851,7 @@ class AuthService {
     );
   }
 
-  /// POST /api/app/worker/rehearsal-checkin-scan-lookup — check-in QR for selected rehearsal slot.
+  /// POST /api/app/worker/rehearsal-checkin-scan-lookup — check-in QR or child badge for selected rehearsal slot.
   Future<RehearsalCheckinScanLookupResult> rehearsalCheckinScanLookup({
     required String code,
     required int slotId,
@@ -866,6 +903,128 @@ class AuthService {
     }
     final json = jsonDecode(res.body) as Map<String, dynamic>;
     return SupervisorChildDetail.fromJson(json);
+  }
+
+  /// POST /api/app/worker/supervisor-children/{assignment}/look
+  /// Загрузка фото образа ребёнка через API импорта образов из админки.
+  Future<SupervisorChildLookResult> getSupervisorChildLook(
+    int assignmentId, {
+    String? brandName,
+  }) async {
+    final token = await getToken();
+    if (token == null || token.isEmpty) throw Exception('Not authenticated');
+    final uri = Uri.parse(
+      '$baseUrl/api/app/worker/supervisor-children/$assignmentId/look',
+    );
+    final body = <String, dynamic>{};
+    final brand = (brandName ?? '').trim();
+    if (brand.isNotEmpty) {
+      body['brand_name'] = brand;
+    }
+    final res = await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(body),
+    );
+    Map<String, dynamic> map = {};
+    try {
+      final decoded = jsonDecode(res.body);
+      if (decoded is Map<String, dynamic>) {
+        map = decoded;
+      }
+    } catch (_) {}
+    if (res.statusCode == 200 ||
+        res.statusCode == 404 ||
+        res.statusCode == 422) {
+      return SupervisorChildLookResult.fromJson(map);
+    }
+    throw Exception(
+      _tryMessage(res.body) ??
+          (map['message'] as String? ??
+              'Failed to load child look (${res.statusCode})'),
+    );
+  }
+
+  /// GET /api/app/worker/looks-import-config
+  Future<LooksImportApiConfig> getLooksImportApiConfig() async {
+    final token = await getToken();
+    if (token == null || token.isEmpty) throw Exception('Not authenticated');
+    final uri = Uri.parse('$baseUrl/api/app/worker/looks-import-config');
+    final res = await http.get(
+      uri,
+      headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'},
+    );
+    if (res.statusCode != 200) {
+      throw Exception(
+        _tryMessage(res.body) ??
+            'Failed to load looks import config (${res.statusCode})',
+      );
+    }
+    final json = jsonDecode(res.body) as Map<String, dynamic>;
+    return LooksImportApiConfig.fromJson(json);
+  }
+
+  /// Прямой вызов исходящего API импорта образов (адрес/токен из админки).
+  Future<SupervisorChildLookResult> fetchChildLookFromImportApi({
+    required String eventName,
+    required String brandName,
+    required String childName,
+  }) async {
+    final config = await getLooksImportApiConfig();
+    if (!config.configured ||
+        (config.apiUrl ?? '').isEmpty ||
+        (config.apiToken ?? '').isEmpty) {
+      return SupervisorChildLookResult(
+        ok: false,
+        message: 'Looks import API is not configured',
+      );
+    }
+    var endpoint = config.apiUrl!.trim();
+    if (endpoint.endsWith('/')) {
+      endpoint = endpoint.substring(0, endpoint.length - 1);
+    }
+    final lower = endpoint.toLowerCase();
+    if (!lower.endsWith('/api/brand-children')) {
+      endpoint = '$endpoint/api/brand-children';
+    }
+    final res = await http.post(
+      Uri.parse(endpoint),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer ${config.apiToken}',
+      },
+      body: jsonEncode({
+        'event_name': eventName,
+        'brand_name': brandName,
+        'child_name': childName,
+      }),
+    );
+    Map<String, dynamic> map = {};
+    try {
+      final decoded = jsonDecode(res.body);
+      if (decoded is Map<String, dynamic>) {
+        map = decoded;
+      }
+    } catch (_) {}
+    final photo = _optionalTrimmedApiString(map['costume_photo_url']) ??
+        _optionalTrimmedApiString(map['photo_url']) ??
+        _optionalTrimmedApiString(map['image_url']);
+    final message =
+        _optionalTrimmedApiString(map['error']) ??
+        _optionalTrimmedApiString(map['message']);
+    return SupervisorChildLookResult(
+      ok: res.statusCode == 200 && (photo ?? '').isNotEmpty,
+      costumePhotoUrl: photo,
+      brandName: brandName,
+      eventName: eventName,
+      childName: childName,
+      message: message,
+    );
   }
 
   /// PATCH /api/app/client/profile — обновить имя, email, телефон текущего пользователя
@@ -2651,6 +2810,20 @@ class AuthService {
     throw Exception('Unable to check app status');
   }
 
+  /// GET /api/app/staff/settings — shared staff app settings from admin.
+  Future<StaffCurrentSettings> getStaffCurrentSettings() async {
+    final uri = Uri.parse('$baseUrl/api/app/staff/settings');
+    final res = await http.get(uri, headers: {'Accept': 'application/json'});
+    if (res.statusCode != 200) {
+      throw Exception(
+        _tryMessage(res.body) ??
+            'Failed to load staff settings (${res.statusCode})',
+      );
+    }
+    final json = jsonDecode(res.body) as Map<String, dynamic>;
+    return StaffCurrentSettings.fromJson(json);
+  }
+
   static bool _parseAppActiveFlag(dynamic raw) {
     if (raw == true || raw == 1 || raw == '1' || raw == 'true') {
       return true;
@@ -2941,7 +3114,7 @@ class StaffRole {
   /// Соответствует `is_active` роли в админке.
   final bool isActive;
 
-  /// Код из API (`home_screen_type`): scan, qr_check, supervisor, hostess, parking, extra_zone, backstage, rehearsal_admin, rehearsal_checkin, gift_issue, interview, lunches, superadmin.
+  /// Код из API (`home_screen_type`): scan, photographer_assistant, qr_check, supervisor, hostess, parking, extra_zone, backstage, rehearsal_admin, rehearsal_checkin, gift_issue, interview, lunches, superadmin.
   /// Пусто — до обновления бэкенда; клиент может определить экран по legacy-токенам code/name.
   final String homeScreenType;
 
@@ -4601,6 +4774,29 @@ class UpcomingEvent {
   }
 }
 
+class StaffCurrentSettings {
+  StaffCurrentSettings({this.currentEventId, this.currentEventName});
+
+  final int? currentEventId;
+  final String? currentEventName;
+
+  factory StaffCurrentSettings.fromJson(Map<String, dynamic> json) {
+    int? parseEventId(dynamic raw) {
+      if (raw is int) return raw;
+      if (raw is String) return int.tryParse(raw);
+      return null;
+    }
+
+    final nameRaw = json['current_event_name'];
+    return StaffCurrentSettings(
+      currentEventId: parseEventId(json['current_event_id']),
+      currentEventName: nameRaw is String && nameRaw.trim().isNotEmpty
+          ? nameRaw.trim()
+          : null,
+    );
+  }
+}
+
 /// Детали события для сотрудника (API worker/events/{id}).
 class StaffEventDetail {
   StaffEventDetail({
@@ -4974,6 +5170,8 @@ class GiftControlReportResponse {
     required this.children,
     required this.statusFilter,
     this.currentStageId,
+    this.slots = const [],
+    this.currentSlotId,
   });
 
   final int eventId;
@@ -4981,10 +5179,13 @@ class GiftControlReportResponse {
   final List<GiftControlChildItem> children;
   final String statusFilter;
   final int? currentStageId;
+  final List<RehearsalAdminSlotItem> slots;
+  final int? currentSlotId;
 
   factory GiftControlReportResponse.fromJson(Map<String, dynamic> json) {
     final stageList = json['stages'];
     final childList = json['children'];
+    final slotList = json['slots'];
     return GiftControlReportResponse(
       eventId: _jsonInt(json['event_id']),
       stages: stageList is List
@@ -5004,6 +5205,15 @@ class GiftControlReportResponse {
           : const [],
       statusFilter: (json['status_filter'] as String? ?? 'all').toString(),
       currentStageId: _jsonIntNullable(json['current_stage_id']),
+      slots: slotList is List
+          ? slotList
+                .map(
+                  (e) =>
+                      RehearsalAdminSlotItem.fromJson(e as Map<String, dynamic>),
+                )
+                .toList()
+          : const [],
+      currentSlotId: _jsonIntNullable(json['current_slot_id']),
     );
   }
 }
@@ -5080,6 +5290,55 @@ class StaffProgressTabData {
   }
 }
 
+class LooksImportApiConfig {
+  LooksImportApiConfig({
+    this.apiUrl,
+    this.apiToken,
+    required this.configured,
+  });
+
+  final String? apiUrl;
+  final String? apiToken;
+  final bool configured;
+
+  factory LooksImportApiConfig.fromJson(Map<String, dynamic> json) {
+    return LooksImportApiConfig(
+      apiUrl: _optionalTrimmedApiString(json['api_url']),
+      apiToken: _optionalTrimmedApiString(json['api_token']),
+      configured: json['configured'] == true,
+    );
+  }
+}
+
+class SupervisorChildLookResult {
+  SupervisorChildLookResult({
+    required this.ok,
+    this.costumePhotoUrl,
+    this.brandName,
+    this.eventName,
+    this.childName,
+    this.message,
+  });
+
+  final bool ok;
+  final String? costumePhotoUrl;
+  final String? brandName;
+  final String? eventName;
+  final String? childName;
+  final String? message;
+
+  factory SupervisorChildLookResult.fromJson(Map<String, dynamic> json) {
+    return SupervisorChildLookResult(
+      ok: json['ok'] == true,
+      costumePhotoUrl: _optionalTrimmedApiString(json['costume_photo_url']),
+      brandName: _optionalTrimmedApiString(json['brand_name']),
+      eventName: _optionalTrimmedApiString(json['event_name']),
+      childName: _optionalTrimmedApiString(json['child_name']),
+      message: _optionalTrimmedApiString(json['message']),
+    );
+  }
+}
+
 class SupervisorChildDetail {
   SupervisorChildDetail({
     required this.assignmentId,
@@ -5100,6 +5359,8 @@ class SupervisorChildDetail {
     this.brandName,
     this.assignedBrandNames = const [],
     this.packageName,
+    this.eventId,
+    this.eventName,
     this.supervisorName,
     this.supervisorPhone,
     this.supervisorPhotoUrl,
@@ -5140,6 +5401,8 @@ class SupervisorChildDetail {
   final String? brandName;
   final List<String> assignedBrandNames;
   final String? packageName;
+  final int? eventId;
+  final String? eventName;
   final String? supervisorName;
   final String? supervisorPhone;
   final String? supervisorPhotoUrl;
@@ -5196,6 +5459,13 @@ class SupervisorChildDetail {
       parentEmail: json['parent_email'] as String?,
       brandName: json['brand_name'] as String?,
       packageName: _optionalTrimmedApiString(json['package_name']),
+      eventId: () {
+        final raw = json['event_id'];
+        if (raw is int) return raw;
+        if (raw is String) return int.tryParse(raw);
+        return null;
+      }(),
+      eventName: _optionalTrimmedApiString(json['event_name']),
       assignedBrandNames: () {
         final rows = json['assigned_brand_names'];
         if (rows is! List) {

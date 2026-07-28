@@ -1166,7 +1166,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactFormLinkMissing =>
-      'No form link is set. Add В«Contact / signup form URLВ» in Application settings in the admin.';
+      'No form link is set. Add «Contact / signup form URL» in Application settings in the admin.';
 
   @override
   String get infoHubTitle => 'Information Hub';
@@ -1185,7 +1185,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get infoFooterCopyright =>
-      'В© 2024 Young Fashion Series. All rights reserved.';
+      '© 2024 Young Fashion Series. All rights reserved.';
 
   @override
   String parentProgressLabel(int completed, int total) {
@@ -1235,6 +1235,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get staffEventTimelineButton => 'TIMELINE';
+
+  @override
+  String get staffLookButton => 'LOOK';
+
+  @override
+  String get staffLookTitle => 'Look';
+
+  @override
+  String get staffLookSelectBrand => 'Select brand';
+
+  @override
+  String get staffLookNotFound => 'Look not found';
+
+  @override
+  String get staffLookLoadFailed => 'Could not load look';
+
+  @override
+  String get staffLookNoBrand => 'Child has no assigned brand';
 
   @override
   String get staffEventTimelineTitle => 'Event timeline';
@@ -1482,6 +1500,35 @@ class AppLocalizationsEn extends AppLocalizations {
       'Select rehearsal slot first';
 
   @override
+  String get staffRehearsalCheckinParticipantsTable => 'Participants table';
+
+  @override
+  String get staffRehearsalCheckinParticipantsTitle => 'Participants';
+
+  @override
+  String get staffBrandRehearsalActiveStage => 'Active brand rehearsal';
+
+  @override
+  String get staffBrandRehearsalSelectWorkplaceTitle => 'Select workplace';
+
+  @override
+  String get staffBrandRehearsalSelectWorkplaceHint =>
+      'Select the brand rehearsal you are working at.';
+
+  @override
+  String get staffBrandRehearsalActivate => 'Activate';
+
+  @override
+  String get staffBrandRehearsalSelectStageFirst =>
+      'Select brand rehearsal stage first';
+
+  @override
+  String get staffBrandRehearsalCheckinButton => 'BRAND REHEARSAL\nCHECK-IN';
+
+  @override
+  String get staffTapToScanBrandRehearsal => 'TAP TO SCAN CHECK-IN OR BADGE QR';
+
+  @override
   String get staffRehearsalAdminBookedChildrenTitle => 'Booked Children';
 
   @override
@@ -1496,7 +1543,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get staffGiftControlButton => 'CONTROL';
 
   @override
+  String get staffGiftIssueSelectWorkplaceTitle => 'Select stage';
+
+  @override
+  String get staffGiftIssueSelectWorkplaceHint =>
+      'Choose the gift stage you are working at.';
+
+  @override
+  String get staffGiftIssueSelectStageFirst => 'Select gift stage first';
+
+  @override
   String get staffGiftControlTitle => 'Gift Issue Control';
+
+  @override
+  String get staffGiftControlSearchHint => 'Search by name';
+
+  @override
+  String get staffGiftControlSelectSlot => 'Filter by rehearsal slot';
+
+  @override
+  String get staffGiftControlAllSlots => 'All rehearsal slots';
 
   @override
   String get staffGiftControlSelectStage => 'Select report stage';
@@ -1804,7 +1870,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get staffRoleSubtitleSuperadmin => 'Super admin tools';
 
   @override
-  String get staffRoleSubtitlePhotographer => 'Media capture & uploads';
+  String get staffRoleSubtitlePhotographer =>
+      'QR scan with photo stage selector';
 
   @override
   String get staffRoleSubtitleStylist => 'Wardrobe & makeup logs';
@@ -1817,7 +1884,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get staffHostessEntryHint =>
-      'Scan child badge to close selected stage and sync Family Look parents';
+      'Scan check-in or child badge to close selected stage and sync Family Look parents';
 
   @override
   String get staffHostessExitHint =>

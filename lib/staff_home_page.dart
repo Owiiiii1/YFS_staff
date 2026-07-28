@@ -32,6 +32,7 @@ class _StaffHomePageState extends State<StaffHomePage> {
   Future<void> _loadStatus() async {
     try {
       await AppSettings.load();
+      await _syncCurrentEventFromServer();
       final status = await widget.auth.getWorkerStatus();
       await bootstrapStaffWorkspace(widget.auth, status);
       if (!mounted) return;
@@ -46,6 +47,21 @@ class _StaffHomePageState extends State<StaffHomePage> {
         _loading = false;
         _error = e.toString();
       });
+    }
+  }
+
+  Future<void> _syncCurrentEventFromServer() async {
+    try {
+      final settings = await widget.auth.getStaffCurrentSettings();
+      final previousEventId = AppSettings.staffActiveEventId;
+      await AppSettings.setStaffActiveEventId(settings.currentEventId);
+      if (previousEventId != settings.currentEventId) {
+        // When event changes from admin, drop saved stage context.
+        await AppSettings.setStaffActiveStageId(null);
+        await AppSettings.setStaffActiveStageType(null);
+      }
+    } catch (_) {
+      // Keep last cached value from SharedPreferences on transient failures.
     }
   }
 
