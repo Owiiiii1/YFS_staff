@@ -24,7 +24,7 @@ workflows:
       - name: Get Flutter packages
         script: flutter pub get
       - name: Check localization encoding
-        script: powershell -ExecutionPolicy Bypass -File scripts/check_mojibake.ps1
+        script: python3 scripts/check_mojibake.py
 
       - name: Install CocoaPods
         script: |
