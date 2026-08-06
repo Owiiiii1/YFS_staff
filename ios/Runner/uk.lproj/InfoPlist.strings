@@ -1,0 +1,3 @@
+/* Permission strings — Ukrainian. */
+"NSCameraUsageDescription" = "Додатку потрібен доступ до камери для сканування QR-кодів.";
+"NSPhotoLibraryUsageDescription" = "Додатку потрібен доступ до фото для завантаження фотографій дитини.";

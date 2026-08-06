@@ -4,6 +4,13 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>ru</string>
+		<string>uk</string>
+		<string>es</string>
+	</array>
 	<key>CFBundleDisplayName</key>
 	<string>YFS Staff</string>
 	<key>CFBundleExecutable</key>
@@ -52,9 +59,9 @@
 		<string>remote-notification</string>
 	</array>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Приложению нужен доступ к фото для загрузки фотографий ребёнка.</string>
+	<string>This app needs photo library access to upload child photos.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Приложению нужен доступ к камере для сканирования QR-кодов.</string>
+	<string>This app needs camera access to scan QR codes.</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>https</string>

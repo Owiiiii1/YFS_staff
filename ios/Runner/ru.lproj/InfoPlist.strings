@@ -1,0 +1,3 @@
+/* Permission strings — Russian (shown when device/app language is Russian). */
+"NSCameraUsageDescription" = "Приложению нужен доступ к камере для сканирования QR-кодов.";
+"NSPhotoLibraryUsageDescription" = "Приложению нужен доступ к фото для загрузки фотографий ребёнка.";
